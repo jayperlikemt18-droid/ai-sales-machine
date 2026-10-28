@@ -1,0 +1,144 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Sales Machine</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b1020;color:#f1f5f9;font-family:Arial,sans-serif}
+main{max-width:900px;margin:auto;padding:20px}
+.card{background:#151e32;padding:20px;border-radius:16px;margin:15px 0}
+h1{color:#a78bfa}
+label{display:block;margin-top:14px}
+input,textarea,select{width:100%;padding:12px;margin-top:6px;border-radius:8px;border:1px solid #394760;background:#0b1224;color:white;font-size:16px}
+textarea{min-height:85px}
+button{width:100%;padding:14px;border:0;border-radius:10px;margin-top:14px;background:#8b5cf6;color:white;font-size:16px;font-weight:bold;cursor:pointer}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#0b1224;padding:15px;border-radius:10px;min-height:120px}
+.small{color:#aab6cd;font-size:13px}
+</style>
+</head>
+<body>
+<main>
+<h1>🤖 AI Sales Machine</h1>
+<p>สร้างสคริปต์ขายสินค้าและ Prompt วิดีโอด้วย AI</p>
+
+<section class="card">
+<h2>ข้อมูลสินค้า</h2>
+<form id="form">
+<label>ชื่อสินค้า *</label>
+<input id="product" required placeholder="เช่น เครื่องเติมลมยางรถยนต์">
+
+<label>จุดเด่นสินค้า *</label>
+<textarea id="features" required placeholder="ใส่คุณสมบัติจริงของสินค้า"></textarea>
+
+<label>กลุ่มลูกค้า</label>
+<input id="audience" placeholder="เช่น คนใช้รถยนต์">
+
+<label>แพลตฟอร์ม</label>
+<select id="platform">
+<option>TikTok Shop</option>
+<option>Facebook Reels</option>
+<option>YouTube Shorts</option>
+</select>
+
+<label>ความยาวคลิป</label>
+<select id="duration">
+<option>15</option><option selected>30</option>
+<option>45</option><option>60</option>
+</select>
+
+<label>ภาษา</label>
+<select id="language">
+<option>Thai</option><option>English</option>
+<option>Thai with simple English</option>
+</select>
+
+<label>ราคาและโปรโมชัน (ถ้ามี)</label>
+<input id="offer" placeholder="ไม่มีก็เว้นว่าง">
+
+<label>รายละเอียดเพิ่มเติม</label>
+<textarea id="extra" placeholder="เช่น ห้ามกล่าวอ้างเกินจริง"></textarea>
+
+<button id="generate" type="submit">✨ สร้างสคริปต์ AI</button>
+</form>
+<p class="small">API Key ต้องเก็บไว้ใน Cloudflare Secret เท่านั้น ห้ามใส่ในไฟล์นี้</p>
+</section>
+
+<section class="card">
+<h2>ผลลัพธ์</h2>
+<p id="status">กรอกข้อมูลสินค้าแล้วกดสร้างสคริปต์</p>
+<pre id="output">สคริปต์จะปรากฏตรงนี้</pre>
+<button type="button" id="copy">คัดลอกสคริปต์</button>
+<button type="button" id="download">ดาวน์โหลด TXT</button>
+</section>
+</main>
+
+<script>
+const API_URL="https://ai-sales-machine-api.jayperlikemt18.workers.dev/api/generate";
+const form=document.getElementById("form");
+const output=document.getElementById("output");
+const statusBox=document.getElementById("status");
+const generate=document.getElementById("generate");
+let result="";
+
+form.addEventListener("submit",async e=>{
+ e.preventDefault();
+ const data={
+  product:document.getElementById("product").value.trim(),
+  features:document.getElementById("features").value.trim(),
+  audience:document.getElementById("audience").value.trim(),
+  platform:document.getElementById("platform").value,
+  duration:document.getElementById("duration").value,
+  language:document.getElementById("language").value,
+  offer:document.getElementById("offer").value.trim(),
+  extra:document.getElementById("extra").value.trim()
+ };
+ generate.disabled=true;
+ generate.textContent="กำลังสร้าง...";
+ statusBox.textContent="กำลังเชื่อมต่อ AI...";
+ try{
+  const response=await fetch(API_URL,{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify(data)
+  });
+  const answer=await response.json();
+  if(!response.ok)throw new Error(answer.error||"HTTP "+response.status);
+  result=answer.text||answer.output_text||"";
+  if(!result)throw new Error("ไม่พบข้อความจาก AI");
+  output.textContent=result;
+  statusBox.textContent="สร้างสำเร็จ ตรวจสอบข้อมูลก่อนนำไปใช้";
+ }catch(err){
+  result="";
+  output.textContent="ยังเชื่อมต่อ AI ไม่สำเร็จ\n\n"+err.message+
+  "\n\nตรวจสอบว่า Cloudflare Worker Deploy แล้ว ตั้ง OPENAI_API_KEY เป็น Secret และ APP_ORIGIN ถูกต้อง";
+  statusBox.textContent="เกิดข้อผิดพลาด";
+ }finally{
+  generate.disabled=false;
+  generate.textContent="✨ สร้างสคริปต์ AI";
+ }
+});
+
+document.getElementById("copy").onclick=async()=>{
+ if(!result){statusBox.textContent="ยังไม่มีสคริปต์";return}
+ try{
+  await navigator.clipboard.writeText(result);
+  statusBox.textContent="คัดลอกแล้ว";
+ }catch(e){
+  statusBox.textContent="เบราว์เซอร์ไม่อนุญาตให้คัดลอกอัตโนมัติ";
+ }
+};
+
+document.getElementById("download").onclick=()=>{
+ if(!result){statusBox.textContent="ยังไม่มีสคริปต์";return}
+ const url=URL.createObjectURL(new Blob([result],{type:"text/plain;charset=utf-8"}));
+ const a=document.createElement("a");
+ a.href=url;a.download="ai-sales-script.txt";a.click();
+ URL.revokeObjectURL(url);
+};
+</script>
+</body>
+</html>
+
