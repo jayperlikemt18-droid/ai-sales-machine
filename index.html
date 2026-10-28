@@ -3,539 +3,249 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0b1020">
-<title>AI Sales Machine V2</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#10131c">
+<title>AI Sales Machine</title>
 <style>
-:root{color-scheme:dark;--bg:#0b1020;--card:#151e32;--input:#0b1224;--border:#394760;--purple:#8b5cf6;--muted:#aab6cd}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:#f1f5f9;font-family:Arial,sans-serif}
-main{max-width:960px;margin:auto;padding:18px}
-h1{color:#c4b5fd;margin-bottom:5px}
-h2{font-size:20px}
-.card{background:var(--card);padding:18px;border-radius:16px;margin:16px 0}
-label{display:block;margin-top:14px;font-size:14px}
-input,textarea,select{width:100%;padding:12px;margin-top:6px;border-radius:9px;border:1px solid var(--border);background:var(--input);color:white;font-size:15px}
-textarea{min-height:85px;resize:vertical}
-button{padding:12px;border:0;border-radius:9px;background:var(--purple);color:white;font-size:15px;font-weight:bold;cursor:pointer;margin-top:10px}
-button:disabled{opacity:.5;cursor:not-allowed}
-button.secondary{background:#26344d}
-button.danger{background:#9f3346}
-button.cancel{background:#b45309}
-.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.actions button{width:100%}
-pre{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--input);padding:15px;border-radius:10px;min-height:150px;font:14px/1.65 Arial,sans-serif}
-.small{color:var(--muted);font-size:12px;line-height:1.6}
-.status{padding:11px;background:var(--input);border-radius:9px;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
-#preview{display:none;max-width:100%;max-height:280px;object-fit:contain;margin-top:10px;border-radius:10px}
-.progress{height:5px;background:#29344a;border-radius:5px;overflow:hidden;margin-top:12px}
-.progress span{display:block;height:100%;width:0;background:#a78bfa;transition:width .25s}
-.hidden{display:none!important}
-@media(min-width:700px){.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}}
+:root{color-scheme:dark;--bg:#10131c;--panel:#191e2b;--line:#30384b;--text:#f4f6fb;--muted:#aab3c5;--accent:#8b7cff;--green:#39d6a3}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,sans-serif}
+main{max-width:900px;margin:auto;padding:20px 14px 60px}
+header{padding:18px 0 24px}h1{font-size:clamp(27px,6vw,42px);line-height:1.1;margin:0 0 10px}h1 span{color:var(--accent)}p{color:var(--muted);margin:6px 0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:17px;margin:14px 0}
+h2{font-size:18px;margin:0 0 14px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+label{display:block;font-size:13px;color:var(--muted);margin:0 0 6px}
+input,select,textarea{width:100%;min-width:0;border:1px solid var(--line);background:#101521;color:var(--text);padding:12px;border-radius:10px;font:inherit}
+textarea{min-height:82px;resize:vertical}.wide{grid-column:1/-1}
+button{border:0;border-radius:11px;padding:12px 15px;font:inherit;font-weight:700;cursor:pointer}
+.primary{background:var(--accent);color:white;width:100%;margin-top:14px}.secondary{background:#2a3143;color:white}.tiny{padding:7px 10px;font-size:12px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.muted{color:var(--muted);font-size:12px}
+#status{white-space:pre-wrap;margin-top:12px;color:var(--green)}#results{display:grid;gap:12px}
+.scene{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px;overflow-wrap:anywhere}
+.scene h3{margin:0 0 10px;font-size:16px}.scene b{color:#c7c0ff}.scene p{color:var(--text);margin:5px 0 12px;white-space:pre-wrap}
+#output{white-space:pre-wrap;overflow-wrap:anywhere;color:var(--text)}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.panel{padding:14px}}
 </style>
 </head>
 <body>
 <main>
-<h1>🤖 AI Sales Machine V2</h1>
-<p class="small">สร้างสคริปต์ขายสินค้า · Video Prompt · Hook · Storyboard</p>
+<header>
+  <div class="muted">AI CONTENT WORKSHOP · MVP</div>
+  <h1>AI Sales <span>Machine</span></h1>
+  <p>ใส่ลิงก์สินค้า แล้วสร้างบทขายและพรอมป์ต์วิดีโอแยกฉากอัตโนมัติ</p>
+</header>
 
-<section class="card">
+<section class="panel">
 <h2>1. ข้อมูลสินค้า</h2>
-<form id="form">
-<label for="product">ชื่อสินค้า *</label>
-<input id="product" required maxlength="200" placeholder="เช่น เครื่องเติมลมยางรถยนต์">
-
-<label for="features">จุดเด่น / คุณสมบัติจริง *</label>
-<textarea id="features" required maxlength="5000" placeholder="ใส่ข้อมูลสินค้าที่ตรวจสอบได้"></textarea>
-
-<div class="two">
-<div>
-<label for="audience">กลุ่มลูกค้า</label>
-<input id="audience" maxlength="300" placeholder="เช่น คนใช้รถยนต์">
-</div>
-<div>
-<label for="platform">แพลตฟอร์ม</label>
-<select id="platform">
-<option>TikTok Shop</option>
-<option>Facebook Reels</option>
-<option>YouTube Shorts</option>
-</select>
-</div>
-</div>
-
-<div class="two">
-<div>
-<label for="duration">ความยาวคลิป</label>
-<select id="duration">
-<option value="15">15 วินาที</option>
-<option value="30" selected>30 วินาที</option>
-<option value="45">45 วินาที</option>
-<option value="60">60 วินาที</option>
-<option value="120">120 วินาที</option>
-<option value="180">180 วินาที</option>
-</select>
-</div>
-<div>
-<label for="language">ภาษา</label>
-<select id="language">
-<option value="Thai">ไทย</option>
-<option value="English">อังกฤษ</option>
-<option value="Thai with simple English">ไทยผสมอังกฤษง่าย ๆ</option>
-</select>
-</div>
-</div>
-
-<label for="offer">ราคา / โปรโมชัน</label>
-<input id="offer" maxlength="500" placeholder="ไม่มีก็เว้นว่าง">
-
-<label for="extra">รายละเอียดเพิ่มเติม</label>
-<textarea id="extra" maxlength="2000" placeholder="เช่น วิดีโอแนวสมจริง ผู้หญิงไทยพูดหน้ากล้อง ห้ามกล่าวอ้างเกินจริง"></textarea>
-
-<label for="mode">โหมดสร้างงาน</label>
-<select id="mode">
-<option value="full">📦 Full Pack — คอนเทนต์ครบชุด</option>
-<option value="hooks">⚡ Hook Lab — คำเปิดคลิป 15 แบบ</option>
-<option value="storyboard">🎬 Storyboard — บทพูดและ Prompt แยกฉาก</option>
-<option value="image_to_video">🖼️ Image to Video — วิเคราะห์รูปและสร้าง Prompt</option>
-</select>
-
-<label for="image">รูปสินค้า (ใช้กับ Image to Video)</label>
-<input id="image" type="file" accept="image/jpeg,image/png,image/webp">
-<img id="preview" alt="ตัวอย่างรูปสินค้า">
-<p id="imageInfo" class="small">รองรับ JPG, PNG, WebP ขนาดไม่เกิน 5 MB</p>
-
-<button id="generate" type="submit" style="width:100%">✨ สร้างด้วย AI</button>
-<button id="cancel" type="button" class="cancel hidden" style="width:100%">ยกเลิกการรอ</button>
-</form>
-<p class="small">API Key อยู่ใน Cloudflare Secret เท่านั้น ไม่ต้องใส่ในหน้านี้</p>
-</section>
-
-<section class="card">
-<h2>2. ผลลัพธ์</h2>
-<p id="status" class="status" role="status" aria-live="polite">พร้อมสร้างคอนเทนต์</p>
-<div class="progress"><span id="progressBar"></span></div>
-<pre id="output">ผลลัพธ์จาก AI จะปรากฏตรงนี้</pre>
-<div class="actions">
-<button id="copy" type="button">📋 คัดลอก</button>
-<button id="download" type="button" class="secondary">⬇️ ดาวน์โหลด TXT</button>
-<button id="save" type="button" class="secondary">💾 บันทึกโปรเจกต์</button>
-<button id="new" type="button" class="secondary">＋ โปรเจกต์ใหม่</button>
+<div class="grid">
+  <div class="wide">
+    <label for="url">ลิงก์สินค้า</label>
+    <input id="url" type="url" placeholder="https://...">
+    <p class="muted">ระบบจะพยายามอ่านข้อมูลจากเว็บ หากเว็บบล็อกการเข้าถึง ให้กรอกชื่อและรายละเอียดด้านล่าง</p>
+  </div>
+  <div>
+    <label for="name">ชื่อสินค้า</label>
+    <input id="name" placeholder="เช่น เครื่องเติมลมรถยนต์">
+  </div>
+  <div>
+    <label for="price">ราคา (ถ้าทราบ)</label>
+    <input id="price" placeholder="เช่น 990 บาท">
+  </div>
+  <div class="wide">
+    <label for="details">จุดเด่น / ข้อมูลสินค้า</label>
+    <textarea id="details" placeholder="ใส่คุณสมบัติที่ยืนยันได้ หรือเว้นว่างถ้าต้องการให้ระบบลองอ่านจากลิงก์"></textarea>
+  </div>
 </div>
 </section>
 
-<section class="card">
-<h2>3. โปรเจกต์ที่บันทึกไว้</h2>
-<p class="small">เก็บในเบราว์เซอร์เครื่องนี้ ไม่ได้ซิงก์ข้ามอุปกรณ์ และไม่เก็บไฟล์รูปต้นฉบับ</p>
-<select id="projectList">
-<option value="">-- เลือกโปรเจกต์ --</option>
-</select>
-<div class="actions">
-<button id="load" type="button" class="secondary">เปิดโปรเจกต์</button>
-<button id="delete" type="button" class="danger">ลบโปรเจกต์</button>
+<section class="panel">
+<h2>2. ตั้งค่าคอนเทนต์</h2>
+<div class="grid">
+  <div>
+    <label for="duration">ความยาววิดีโอ</label>
+    <select id="duration">
+      <option>10</option><option>20</option><option selected>30</option>
+      <option>40</option><option>50</option><option>60</option>
+      <option>90</option><option>120</option><option>180</option>
+      <option>240</option><option>300</option>
+    </select>
+  </div>
+  <div>
+    <label for="language">ภาษา</label>
+    <select id="language">
+      <option value="Thai">ไทย</option>
+      <option value="English">English</option>
+      <option value="Thai and English">ไทย + English</option>
+    </select>
+  </div>
+  <div>
+    <label for="platform">แพลตฟอร์ม</label>
+    <select id="platform">
+      <option>TikTok / TikTok Shop</option>
+      <option>Facebook Reels</option>
+      <option>YouTube Shorts</option>
+      <option>ทุกแพลตฟอร์ม</option>
+    </select>
+  </div>
+  <div>
+    <label for="ratio">อัตราส่วนภาพ</label>
+    <select id="ratio">
+      <option value="9:16">9:16 แนวตั้ง</option>
+      <option value="16:9">16:9 แนวนอน</option>
+      <option value="1:1">1:1 สี่เหลี่ยม</option>
+    </select>
+  </div>
+  <div>
+    <label for="tool">เครื่องมือสร้างวิดีโอ</label>
+    <select id="tool">
+      <option>Google Flow</option>
+      <option>Meta AI</option>
+      <option>ทั้ง Flow และ Meta AI</option>
+    </select>
+  </div>
+  <div>
+    <label for="voice">เสียงบรรยาย</label>
+    <select id="voice">
+      <option>เสียงผู้หญิง เป็นกันเอง</option>
+      <option>เสียงผู้ชาย เป็นกันเอง</option>
+      <option>เสียงผู้หญิง พลังสูง กระตุ้นยอดขาย</option>
+      <option>เสียงผู้ชาย สุขุม น่าเชื่อถือ</option>
+      <option>เสียงสารคดี</option>
+      <option>ไม่กำหนดเสียง</option>
+    </select>
+  </div>
+  <div class="wide">
+    <label for="styles">สไตล์วิดีโอ (เลือกได้หลายแบบ)</label>
+    <select id="styles" multiple size="8">
+      <option>UGC รีวิวสินค้า</option>
+      <option>อินฟลูเอนเซอร์รีวิว</option>
+      <option>พรีเซนเตอร์พูดกับกล้อง</option>
+      <option>เล่าประสบการณ์ลูกค้าแบบจำลอง</option>
+      <option>ไลฟ์ขายสินค้าแบบจำลอง</option>
+      <option>โฆษณาสินค้าพรีเมียม</option>
+      <option>โฆษณาสมจริงแบบมืออาชีพ</option>
+      <option>ภาพยนตร์ Cinematic</option>
+      <option>ภาพ Macro Close-up</option>
+      <option>โชว์สินค้าในสตูดิโอหรู</option>
+      <option>Slow Motion</option>
+      <option>หมุนสินค้า 360 องศา</option>
+      <option>การ์ตูน 3D</option>
+      <option>การ์ตูน 2D</option>
+      <option>มาสคอตพูดได้</option>
+      <option>สินค้าเป็นตัวละคร</option>
+      <option>โลกจิ๋ว Miniature</option>
+      <option>แอนิเมชันอธิบายสินค้า</option>
+      <option>สาธิตทีละขั้นตอน</option>
+      <option>แกะกล่อง Unboxing</option>
+      <option>อธิบายฟีเจอร์</option>
+      <option>ปัญหา → วิธีแก้</option>
+      <option>เปรียบเทียบก่อนและหลัง</option>
+      <option>ทดลองใช้งาน</option>
+      <option>ละครตลกสั้น</option>
+      <option>ตอนจบหักมุม</option>
+      <option>เปิดด้วยคำถามชวนสงสัย</option>
+      <option>เล่าเรื่องสั้นมีตัวละคร</option>
+      <option>ASMR</option>
+      <option>สารคดีสินค้าแบบสั้น</option>
+    </select>
+    <p class="muted">แตะเลือกหลายรายการได้บนมือถือหรือคอมพิวเตอร์ หากไม่เลือก ระบบจะช่วยแนะนำสไตล์</p>
+  </div>
+  <div class="wide">
+    <label for="extra">คำสั่งเพิ่มเติม (ไม่บังคับ)</label>
+    <textarea id="extra" placeholder="เช่น ให้มีผู้หญิงไทยนำเสนอ สินค้าต้องเหมือนภาพอ้างอิง ไม่ใส่ตัวหนังสือบนจอ"></textarea>
+  </div>
 </div>
+<button class="primary" id="generate">สร้างชุดคอนเทนต์</button>
+<div id="status" role="status"></div>
+</section>
+
+<section class="panel">
+<div class="row" style="justify-content:space-between">
+  <h2 style="margin:0">3. ผลลัพธ์</h2>
+  <button class="secondary tiny" id="copyAll">คัดลอกทั้งหมด</button>
+</div>
+<p class="muted">ผลลัพธ์ประกอบด้วยแนวคิดขาย บทพูด และพรอมป์ต์รายฉาก</p>
+<div id="results" style="margin-top:14px"></div>
+<pre id="output"></pre>
 </section>
 </main>
 
 <script>
-"use strict";
-
-const API_URL =
-  "https://ai-sales-machine-api.jayperlikemt18.workers.dev/api/generate";
-
 const $ = id => document.getElementById(id);
-const form = $("form");
-const output = $("output");
-const statusBox = $("status");
-const generateButton = $("generate");
-const cancelButton = $("cancel");
-const progressBar = $("progressBar");
-
-let result = "";
-let currentImage = null;
-let activeController = null;
-let requestId = 0;
-
-// Worker/Cloudflare อาจตัดการเชื่อมต่อก่อนถึง timeout ฝั่งเว็บ
-// จึงใช้ timeout ฝั่งหน้าเว็บเพื่อหยุดรอและแจ้งผู้ใช้เท่านั้น
-const CLIENT_TIMEOUT_MS = 85000;
-const STORAGE_KEY = "asm_projects_v2";
-
-function setStatus(message) {
-  statusBox.textContent = message;
-}
-
-function setBusy(busy) {
-  generateButton.disabled = busy;
-  cancelButton.classList.toggle("hidden", !busy);
-  generateButton.textContent = busy
-    ? "กำลังสร้างคอนเทนต์..."
-    : "✨ สร้างด้วย AI";
-}
-
-function getFormData() {
-  return {
-    product: $("product").value.trim(),
-    features: $("features").value.trim(),
-    audience: $("audience").value.trim(),
-    platform: $("platform").value,
-    duration: $("duration").value,
+let latest = "";
+$("generate").addEventListener("click", async () => {
+  const worker = prompt("ใส่ URL ของ Cloudflare Worker ที่ติดตั้งไว้ เช่น https://ชื่อ-worker.ชื่อบัญชี.workers.dev");
+  if (!worker) return;
+  const styles = Array.from($("styles").selectedOptions).map(o => o.value);
+  const payload = {
+    url: $("url").value.trim(),
+    name: $("name").value.trim(),
+    price: $("price").value.trim(),
+    details: $("details").value.trim(),
+    duration: Number($("duration").value),
     language: $("language").value,
-    offer: $("offer").value.trim(),
-    extra: $("extra").value.trim(),
-    mode: $("mode").value,
-    image: currentImage
+    platform: $("platform").value,
+    ratio: $("ratio").value,
+    tool: $("tool").value,
+    voice: $("voice").value,
+    styles,
+    extra: $("extra").value.trim()
   };
-}
-
-function parseResponseText(raw, response) {
+  if (!payload.url && !payload.name && !payload.details) {
+    $("status").textContent = "ใส่ลิงก์สินค้า หรือชื่อ/รายละเอียดสินค้าอย่างน้อยหนึ่งอย่างก่อน";
+    return;
+  }
+  $("generate").disabled = true;
+  $("generate").textContent = "กำลังสร้าง...";
+  $("status").textContent = "กำลังอ่านข้อมูลสินค้าและสร้างสคริปต์...";
+  $("results").innerHTML = "";
+  $("output").textContent = "";
   try {
-    return JSON.parse(raw);
-  } catch {
-    if (response.status === 524 || /error code:\s*524/i.test(raw)) {
-      throw new Error(
-        "Cloudflare Timeout (524): Worker รอ AI นานเกินไป ระบบตัดการเชื่อมต่อแล้ว ลอง Hook Lab หรือ Storyboard ซึ่งมีงานสั้นกว่า"
-      );
-    }
-
-    if (response.status === 522) {
-      throw new Error(
-        "Cloudflare 522: ติดต่อเซิร์ฟเวอร์ปลายทางไม่ได้ชั่วคราว"
-      );
-    }
-
-    if (response.status === 502 || response.status === 504) {
-      throw new Error(
-        "เซิร์ฟเวอร์หรือ AI ตอบกลับไม่สำเร็จ (HTTP " +
-        response.status + ")"
-      );
-    }
-
-    if (!response.ok) {
-      throw new Error(
-        "เซิร์ฟเวอร์ส่งข้อความที่ไม่ใช่ JSON (HTTP " +
-        response.status + ") " + raw.slice(0, 250)
-      );
-    }
-
-    throw new Error("รูปแบบคำตอบจากเซิร์ฟเวอร์ไม่ถูกต้อง");
-  }
-}
-
-$("image").addEventListener("change", () => {
-  const file = $("image").files[0];
-  currentImage = null;
-  $("preview").style.display = "none";
-
-  if (!file) {
-    $("imageInfo").textContent = "ไม่ได้เลือกรูป";
-    return;
-  }
-
-  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-    $("imageInfo").textContent = "ไฟล์ต้องเป็น JPG, PNG หรือ WebP";
-    $("image").value = "";
-    return;
-  }
-
-  if (file.size > 5 * 1024 * 1024) {
-    $("imageInfo").textContent = "รูปใหญ่เกิน 5 MB กรุณาย่อรูปก่อน";
-    $("image").value = "";
-    return;
-  }
-
-  const reader = new FileReader();
-
-  reader.onload = () => {
-    const dataUrl = String(reader.result || "");
-    const comma = dataUrl.indexOf(",");
-    if (comma < 0) {
-      $("imageInfo").textContent = "อ่านรูปไม่สำเร็จ";
-      return;
-    }
-
-    currentImage = {
-      mimeType: file.type,
-      data: dataUrl.slice(comma + 1)
-    };
-
-    $("preview").src = dataUrl;
-    $("preview").style.display = "block";
-    $("imageInfo").textContent = "เลือกรูปแล้ว: " + file.name;
-  };
-
-  reader.onerror = () => {
-    $("imageInfo").textContent = "อ่านรูปไม่สำเร็จ";
-  };
-
-  reader.readAsDataURL(file);
-});
-
-form.addEventListener("submit", async event => {
-  event.preventDefault();
-
-  if (activeController) return;
-
-  if (!form.reportValidity()) return;
-
-  const data = getFormData();
-
-  if (data.mode === "image_to_video" && !data.image) {
-    setStatus("กรุณาเลือกรูปสินค้าก่อนใช้โหมด Image to Video");
-    return;
-  }
-
-  const thisRequest = ++requestId;
-  const controller = new AbortController();
-  activeController = controller;
-
-  const timeoutId = setTimeout(() => {
-    controller.abort("client-timeout");
-  }, CLIENT_TIMEOUT_MS);
-
-  setBusy(true);
-  result = "";
-  progressBar.style.width = "15%";
-  output.textContent = "กำลังรอคำตอบจาก AI...";
-  setStatus(
-    "กำลังสร้างงาน อาจใช้เวลาสักครู่ หาก Cloudflare ตัดการเชื่อมต่อจะมีข้อความแจ้งสาเหตุ"
-  );
-
-  try {
-    const response = await fetch(API_URL, {
+    const response = await fetch(worker.replace(/\/+$/,"") + "/generate", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-      signal: controller.signal
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
     });
-
-    progressBar.style.width = "75%";
-
-    const raw = await response.text();
-    if (thisRequest !== requestId) return;
-
-    const answer = parseResponseText(raw, response);
-
-    if (!response.ok) {
-      throw new Error(answer.error || "HTTP " + response.status);
-    }
-
-    const text = answer.text || answer.output_text || "";
-
-    if (!text.trim()) {
-      throw new Error("ไม่พบข้อความจาก AI ในคำตอบ");
-    }
-
-    result = text;
-    output.textContent = result;
-    progressBar.style.width = "100%";
-    setStatus(
-      "สร้างสำเร็จ · ผู้ให้บริการ: " +
-      (answer.provider || "AI") +
-      (answer.model ? " · โมเดล: " + answer.model : "") +
-      " · กรุณาตรวจสอบข้อมูลก่อนนำไปโพสต์"
-    );
-  } catch (error) {
-    if (thisRequest !== requestId) return;
-
-    result = "";
-    progressBar.style.width = "0%";
-
-    if (error.name === "AbortError") {
-      const message = controller.signal.reason === "client-timeout"
-        ? "หน้าเว็บหยุดรอหลัง 85 วินาที แต่คำขอที่ส่งไปอาจยังประมวลผลอยู่ที่เซิร์ฟเวอร์ หากก่อนหน้านี้มี 524 ต้องแก้ฝั่ง Worker/API ด้วย"
-        : "ยกเลิกการรอแล้ว การยกเลิกจากหน้าเว็บไม่ได้รับประกันว่าคำขอที่ส่งถึง AI จะหยุดประมวลผล";
-      output.textContent = message;
-      setStatus("หยุดรอแล้ว");
-    } else {
-      output.textContent =
-        "สร้างไม่สำเร็จ\n\n" + (error.message || "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ") +
-        "\n\nหากขึ้น 524 ซ้ำ ต้องแก้ Worker ให้สร้างงานสั้นลงหรือใช้ระบบงานเบื้องหลัง ไม่ใช่แค่แก้ index.html";
-      setStatus("เกิดข้อผิดพลาด");
-    }
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "เกิดข้อผิดพลาด");
+    latest = data.result || "";
+    $("output").textContent = latest;
+    $("results").innerHTML = "";
+    $("status").textContent = "สร้างเสร็จแล้ว — ตรวจสอบข้อมูลสินค้าและบทพูดก่อนนำไปใช้";
+    renderScenes(latest);
+  } catch (e) {
+    $("status").textContent = "สร้างไม่สำเร็จ: " + e.message + "\nตรวจ URL ของ Worker, API Key และโควต้าโมเดล";
   } finally {
-    clearTimeout(timeoutId);
-    if (activeController === controller) {
-      activeController = null;
-      setBusy(false);
-    }
+    $("generate").disabled = false;
+    $("generate").textContent = "สร้างชุดคอนเทนต์";
   }
 });
-
-cancelButton.addEventListener("click", () => {
-  if (activeController) {
-    activeController.abort("user-cancel");
-  }
-});
-
-$("copy").addEventListener("click", async () => {
-  if (!result) {
-    setStatus("ยังไม่มีผลลัพธ์ให้คัดลอก");
-    return;
-  }
-
-  try {
-    await navigator.clipboard.writeText(result);
-    setStatus("คัดลอกผลลัพธ์แล้ว");
-  } catch {
-    setStatus("คัดลอกอัตโนมัติไม่ได้ กรุณาเลือกข้อความในช่องผลลัพธ์แล้วคัดลอก");
-  }
-});
-
-$("download").addEventListener("click", () => {
-  if (!result) {
-    setStatus("ยังไม่มีผลลัพธ์ให้ดาวน์โหลด");
-    return;
-  }
-
-  const blob = new Blob([result], {
-    type: "text/plain;charset=utf-8"
+function renderScenes(text) {
+  const parts = text.split(/(?=ฉากที่\s*\d+|Scene\s*\d+)/i).filter(x => x.trim());
+  if (parts.length < 2) return;
+  parts.forEach((part,i) => {
+    const card = document.createElement("article");
+    card.className = "scene";
+    const title = document.createElement("h3");
+    title.textContent = (part.match(/^.{1,70}/) || ["ฉากที่ " + (i+1)])[0].trim();
+    const body = document.createElement("p");
+    body.textContent = part.slice(title.textContent.length).trim() || part;
+    const btn = document.createElement("button");
+    btn.className = "secondary tiny";
+    btn.textContent = "คัดลอกฉากนี้";
+    btn.onclick = async () => {
+      await navigator.clipboard.writeText(part);
+      btn.textContent = "คัดลอกแล้ว";
+      setTimeout(()=>btn.textContent="คัดลอกฉากนี้",1200);
+    };
+    card.append(title,body,btn);
+    $("results").append(card);
   });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "ai-sales-content.txt";
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-});
-
-function getProjects() {
-  try {
-    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    return Array.isArray(data) ? data : [];
-  } catch {
-    return [];
-  }
 }
-
-function refreshProjects(selectedId = "") {
-  const list = $("projectList");
-  list.replaceChildren();
-
-  const placeholder = document.createElement("option");
-  placeholder.value = "";
-  placeholder.textContent = "-- เลือกโปรเจกต์ --";
-  list.appendChild(placeholder);
-
-  getProjects().forEach(project => {
-    const option = document.createElement("option");
-    option.value = project.id;
-    option.textContent = project.name + " · " + project.date;
-    list.appendChild(option);
-  });
-
-  list.value = selectedId;
-}
-
-function snapshot() {
-  return {
-    product: $("product").value,
-    features: $("features").value,
-    audience: $("audience").value,
-    platform: $("platform").value,
-    duration: $("duration").value,
-    language: $("language").value,
-    offer: $("offer").value,
-    extra: $("extra").value,
-    mode: $("mode").value,
-    result: result
-  };
-}
-
-$("save").addEventListener("click", () => {
-  const data = snapshot();
-
-  if (!data.product.trim()) {
-    setStatus("กรอกชื่อสินค้าก่อนบันทึก");
-    return;
-  }
-
-  const projects = getProjects();
-  const id = String(Date.now());
-
-  projects.unshift({
-    id,
-    name: data.product,
-    date: new Date().toLocaleString("th-TH"),
-    data
-  });
-
-  try {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(projects.slice(0, 50))
-    );
-    refreshProjects(id);
-    setStatus("บันทึกโปรเจกต์ในเบราว์เซอร์แล้ว");
-  } catch {
-    setStatus("พื้นที่จัดเก็บเต็ม กรุณาลบโปรเจกต์เก่า");
-  }
+$("copyAll").addEventListener("click", async () => {
+  if (!latest) { $("status").textContent = "ยังไม่มีผลลัพธ์ให้คัดลอก"; return; }
+  await navigator.clipboard.writeText(latest);
+  $("status").textContent = "คัดลอกผลลัพธ์ทั้งหมดแล้ว";
 });
-
-$("load").addEventListener("click", () => {
-  const project = getProjects().find(
-    item => item.id === $("projectList").value
-  );
-
-  if (!project) {
-    setStatus("เลือกโปรเจกต์ก่อน");
-    return;
-  }
-
-  const data = project.data || {};
-
-  [
-    "product", "features", "audience", "platform",
-    "duration", "language", "offer", "extra", "mode"
-  ].forEach(key => {
-    if (data[key] !== undefined) $(key).value = data[key];
-  });
-
-  result = data.result || "";
-  output.textContent = result || "โปรเจกต์นี้ยังไม่มีผลลัพธ์";
-  currentImage = null;
-  $("image").value = "";
-  $("preview").style.display = "none";
-  $("imageInfo").textContent = "ไม่ได้เลือกรูป (รูปต้นฉบับไม่ได้ถูกบันทึก)";
-  setStatus("เปิดโปรเจกต์แล้ว");
-});
-
-$("delete").addEventListener("click", () => {
-  const id = $("projectList").value;
-
-  if (!id) {
-    setStatus("เลือกโปรเจกต์ที่จะลบก่อน");
-    return;
-  }
-
-  try {
-    const remaining = getProjects().filter(item => item.id !== id);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(remaining));
-    refreshProjects();
-    setStatus("ลบโปรเจกต์แล้ว");
-  } catch {
-    setStatus("ลบโปรเจกต์ไม่สำเร็จ");
-  }
-});
-
-$("new").addEventListener("click", () => {
-  if (activeController) {
-    activeController.abort("user-cancel");
-  }
-
-  requestId++;
-  result = "";
-  currentImage = null;
-  form.reset();
-  output.textContent = "ผลลัพธ์จาก AI จะปรากฏตรงนี้";
-  progressBar.style.width = "0%";
-  $("preview").style.display = "none";
-  $("imageInfo").textContent = "รองรับ JPG, PNG, WebP ขนาดไม่เกิน 5 MB";
-  setStatus("เริ่มโปรเจกต์ใหม่แล้ว");
-});
-
-refreshProjects();
 </script>
 </body>
 </html>
